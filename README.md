@@ -2,7 +2,7 @@
 A modern and responsive College Placement Dashboard built using HTML, CSS, and JavaScript. It visualizes student placement data with interactive charts, filters, and analytics to help track placement performance effectively.
 Here is the updated `README.md` file with the deployment link included.
 
-```markdown
+
 # College Placement Dashboard
 
 A modern, fully responsive web application for visualizing and managing college placement data. Built with pure HTML, CSS, and JavaScript, featuring real-time charts, filtering capabilities, and a polished dark/light mode interface.
