@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Dashboard | Nexus Institute</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --bg-card-hover: #1f2940;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #06d6a0;
+            --accent-secondary: #118ab2;
+            --accent-tertiary: #ef476f;
+            --accent-warning: #ffd166;
+            --border: #2d3a52;
+            --shadow: rgba(6, 214, 160, 0.1);
+            --glow: rgba(6, 214, 160, 0.3);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --glow: rgba(6, 214, 160, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        /* Background Pattern */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+            background-image: 
+                radial-gradient(circle at 20% 80%, var(--accent) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, var(--accent-secondary) 0%, transparent 50%);
+            filter: blur(100px);
+        }
+
+        [data-theme="light"] .bg-pattern {
+            opacity: 0.15;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            z-index: 100;
+            transition: transform 0.3s ease, width 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #0a0f1c;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 18px;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-section {
+            padding: 20px 12px;
+            flex: 1;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 0 12px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar.collapsed .nav-label {
+            opacity: 0;
+            height: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: #0a0f1c;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .nav-item span {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-item span {
+            opacity: 0;
+            width: 0;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 80px;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(26, 34, 53, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        [data-theme="light"] .header {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .menu-toggle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .menu-toggle:hover {
+            background: var(--bg-card);
+            border-color: var(--accent);
+        }
+
+        .page-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-title p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card);
+            border-color: var(--accent);
+            transform: rotate(15deg);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px 8px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-profile:hover {
+            background: var(--bg-card);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            text-align: left;
+        }
+
+        .user-info .name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-info .role {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 32px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .stat-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+        }
+
+        .stat-card:nth-child(2)::before {
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent-tertiary));
+        }
+
+        .stat-card:nth-child(3)::before {
+            background: linear-gradient(90deg, var(--accent-warning), var(--accent));
+        }
+
+        .stat-card:nth-child(4)::before {
+            background: linear-gradient(90deg, var(--accent-tertiary), var(--accent-secondary));
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-card:nth-child(1) .stat-icon {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--accent);
+        }
+
+        .stat-card:nth-child(2) .stat-icon {
+            background: rgba(17, 138, 178, 0.15);
+            color: var(--accent-secondary);
+        }
+
+        .stat-card:nth-child(3) .stat-icon {
+            background: rgba(255, 209, 102, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .stat-card:nth-child(4) .stat-icon {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--accent-tertiary);
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        .stat-trend.up {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--accent);
+        }
+
+        .stat-trend.down {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--accent-tertiary);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .chart-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .chart-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chart-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .chart-btn:hover, .chart-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #0a0f1c;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Line Chart Card */
+        .line-chart-card {
+            grid-column: 1 / -1;
+        }
+
+        /* Pie Chart */
+        .pie-chart-wrapper {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .pie-chart-container {
+            width: 200px;
+            height: 200px;
+        }
+
+        .pie-legend {
+            flex: 1;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legend-item:last-child {
+            border-bottom: none;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .legend-label {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .legend-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            padding: 12px 40px 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            min-width: 160px;
+        }
+
+        .filter-select:hover, .filter-select:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border: none;
+            border-radius: 10px;
+            color: #0a0f1c;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--glow);
+        }
+
+        .reset-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .reset-btn:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        /* Table Section */
+        .table-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .table-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .table-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            width: 280px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 16px 24px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            color: var(--accent);
+        }
+
+        th i {
+            margin-left: 8px;
+            font-size: 10px;
+        }
+
+        td {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .student-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .student-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .dept-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .dept-cse {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--accent);
+        }
+
+        .dept-ece {
+            background: rgba(17, 138, 178, 0.15);
+            color: var(--accent-secondary);
+        }
+
+        .dept-mech {
+            background: rgba(255, 209, 102, 0.15);
+            color: var(--accent-warning);
+        }
+
+        .dept-civil {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--accent-tertiary);
+        }
+
+        .dept-it {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8b5cf6;
+        }
+
+        .package-value {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .company-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .company-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Pagination */
+        .table-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #0a0f1c;
+        }
+
+        /* Mobile Sidebar Toggle */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .pie-chart-wrapper {
+                flex-direction: column;
+            }
+
+            .pie-legend {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 16px 20px;
+            }
+
+            .header-right .user-profile {
+                display: none;
+            }
+
+            .dashboard-content {
+                padding: 20px;
+            }
+
+            .filters-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .table-footer {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus styles */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="bg-pattern"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">N</div>
+            <span class="logo-text">Nexus Institute</span>
+        </div>
+        <nav class="nav-section">
+            <div class="nav-label">Main</div>
+            <div class="nav-item active" data-page="dashboard">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-page="students">
+                <i class="fas fa-user-graduate"></i>
+                <span>Students</span>
+            </div>
+            <div class="nav-item" data-page="companies">
+                <i class="fas fa-building"></i>
+                <span>Companies</span>
+            </div>
+            <div class="nav-item" data-page="analytics">
+                <i class="fas fa-chart-line"></i>
+                <span>Analytics</span>
+            </div>
+            <div class="nav-label">Settings</div>
+            <div class="nav-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+            <div class="nav-item" data-page="help">
+                <i class="fas fa-question-circle"></i>
+                <span>Help Center</span>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="page-title">
+                    <h1>Placement Dashboard</h1>
+                    <p>Academic Year 2024-25</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <div class="name">Admin</div>
+                        <div class="role">Placement Officer</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Stats Cards -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i> 12%
+                        </div>
+                    </div>
+                    <div class="stat-value" data-count="2847">0</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i> 18%
+                        </div>
+                    </div>
+                    <div class="stat-value" data-count="1923">0</div>
+                    <div class="stat-label">Students Placed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="stat-trend up">
+                            <i class="fas fa-arrow-up"></i> 24%
+                        </div>
+                    </div>
+                    <div class="stat-value">48 LPA</div>
+                    <div class="stat-label">Highest Package</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stat-trend down">
+                            <i class="fas fa-arrow-down"></i> 3%
+                        </div>
+                    </div>
+                    <div class="stat-value">8.5 LPA</div>
+                    <div class="stat-label">Average Package</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <!-- Bar Chart -->
+                <div class="chart-card" id="barChartCard">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">Company-wise Placements</div>
+                            <div class="chart-subtitle">Top recruiting companies</div>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-btn active" data-period="2024">2024</button>
+                            <button class="chart-btn" data-period="2023">2023</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Pie Chart -->
+                <div class="chart-card" id="pieChartCard">
+                    <div class="chart-header">
+                        <div>
+                            <div class="chart-title">Department-wise</div>
+                            <div class="chart-subtitle">Placement distribution</div>
+                        </div>
+                    </div>
+                    <div class="pie-chart-wrapper">
+                        <div class="pie-chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                        <div class="pie-legend" id="pieLegend"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Line Chart -->
+            <div class="chart-card line-chart-card" id="lineChartCard">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Package Trends</div>
+                        <div class="chart-subtitle">Year-wise salary progression</div>
+                    </div>
+                    <div class="chart-actions">
+                        <button class="chart-btn active" data-metric="highest">Highest</button>
+                        <button class="chart-btn" data-metric="average">Average</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label class="filter-label">Department</label>
+                    <select class="filter-select" id="deptFilter">
+                        <option value="">All Departments</option>
+                        <option value="CSE">Computer Science</option>
+                        <option value="ECE">Electronics</option>
+                        <option value="MECH">Mechanical</option>
+                        <option value="CIVIL">Civil</option>
+                        <option value="IT">Information Tech</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Year</label>
+                    <select class="filter-select" id="yearFilter">
+                        <option value="">All Years</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Company</label>
+                    <select class="filter-select" id="companyFilter">
+                        <option value="">All Companies</option>
+                        <option value="Google">Google</option>
+                        <option value="Microsoft">Microsoft</option>
+                        <option value="Amazon">Amazon</option>
+                        <option value="Apple">Apple</option>
+                        <option value="Meta">Meta</option>
+                        <option value="Infosys">Infosys</option>
+                        <option value="TCS">TCS</option>
+                        <option value="Wipro">Wipro</option>
+                    </select>
+                </div>
+                <button class="filter-btn" id="applyFilters">Apply Filters</button>
+                <button class="reset-btn" id="resetFilters">Reset</button>
+            </div>
+
+            <!-- Student Table -->
+            <div class="table-section" id="tableSection">
+                <div class="table-header">
+                    <div class="table-title">Placed Students</div>
+                    <div class="table-controls">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="searchInput" placeholder="Search students...">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-sort="name">Name <i class="fas fa-sort"></i></th>
+                                <th data-sort="department">Department <i class="fas fa-sort"></i></th>
+                                <th data-sort="company">Company <i class="fas fa-sort"></i></th>
+                                <th data-sort="package">Package <i class="fas fa-sort"></i></th>
+                                <th data-sort="year">Year <i class="fas fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="page-info">Showing <span id="showingCount">0</span> of <span id="totalCount">0</span> students</div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize variables first
+        let barChart = null;
+        let pieChart = null;
+        let lineChart = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let filteredStudents = [];
+        let sortColumn = 'name';
+        let sortDirection = 'asc';
+
+        // Student Data
+        const students = [
+            { name: "Arjun Sharma", department: "CSE", company: "Google", package: 48, year: 2024 },
+            { name: "Priya Patel", department: "ECE", company: "Microsoft", package: 42, year: 2024 },
+            { name: "Rahul Kumar", department: "CSE", company: "Amazon", package: 35, year: 2024 },
+            { name: "Sneha Gupta", department: "IT", company: "Apple", package: 38, year: 2024 },
+            { name: "Vikram Singh", department: "MECH", company: "Tata Motors", package: 12, year: 2024 },
+            { name: "Ananya Reddy", department: "CSE", company: "Meta", package: 45, year: 2024 },
+            { name: "Karthik Nair", department: "ECE", company: "Qualcomm", package: 28, year: 2023 },
+            { name: "Divya Sharma", department: "CIVIL", company: "L&T", package: 10, year: 2023 },
+            { name: "Rohan Mehta", department: "CSE", company: "Infosys", package: 8, year: 2023 },
+            { name: "Ishita Joshi", department: "IT", company: "TCS", package: 7.5, year: 2023 },
+            { name: "Aditya Verma", department: "ECE", company: "Wipro", package: 8, year: 2023 },
+            { name: "Pooja Rao", department: "CSE", company: "Google", package: 46, year: 2024 },
+            { name: "Siddharth Jain", department: "MECH", company: "Mahindra", package: 11, year: 2023 },
+            { name: "Tanvi Sharma", department: "CSE", company: "Microsoft", package: 40, year: 2024 },
+            { name: "Nikhil Das", department: "IT", company: "Amazon", package: 32, year: 2024 },
+            { name: "Meera Krishnan", department: "ECE", company: "Intel", package: 24, year: 2023 },
+            { name: "Ravi Teja", department: "CSE", company: "Nvidia", package: 36, year: 2024 },
+            { name: "Kavya Nair", department: "CIVIL", company: "DLF", package: 9, year: 2023 },
+            { name: "Yash Agarwal", department: "MECH", company: "Bosch", package: 14, year: 2024 },
+            { name: "Riya Menon", department: "CSE", company: "Adobe", package: 30, year: 2024 },
+            { name: "Amit Patel", department: "IT", company: "Cisco", package: 22, year: 2023 },
+            { name: "Sara Khan", department: "ECE", company: "Samsung", package: 18, year: 2023 },
+            { name: "Manish Kumar", department: "CSE", company: "Flipkart", package: 28, year: 2024 },
+            { name: "Nisha Singh", department: "CIVIL", company: "Shapoorji", package: 8.5, year: 2023 },
+            { name: "Harsh Vardhan", department: "MECH", company: "L&T", package: 13, year: 2024 },
+            { name: "Anjali Thomas", department: "CSE", company: "Uber", package: 26, year: 2024 },
+            { name: "Deepak Yadav", department: "IT", company: "Swiggy", package: 16, year: 2023 },
+            { name: "Charu Mishra", department: "ECE", company: "Sony", package: 20, year: 2024 },
+            { name: "Varun Gupta", department: "CSE", company: "Paytm", package: 22, year: 2023 },
+            { name: "Ishaani Roy", department: "CIVIL", company: "IRCON", package: 11, year: 2024 }
+        ];
+
+        // Department Data for Pie Chart
+        const departmentData = {
+            labels: ['CSE', 'ECE', 'IT', 'Mechanical', 'Civil'],
+            values: [45, 25, 15, 10, 5],
+            colors: ['#06d6a0', '#118ab2', '#8b5cf6', '#ffd166', '#ef476f']
+        };
+
+        // Company Data for Bar Chart
+        const companyData = {
+            labels: ['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple', 'Infosys', 'TCS', 'Wipro'],
+            values: [45, 38, 52, 28, 35, 120, 180, 95]
+        };
+
+        // Package Trends Data
+        const packageTrends = {
+            years: ['2019', '2020', '2021', '2022', '2023', '2024'],
+            highest: [28, 32, 38, 42, 45, 48],
+            average: [5.5, 6.2, 7.0, 7.8, 8.2, 8.5]
+        };
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const themeToggle = document.getElementById('themeToggle');
+        const searchInput = document.getElementById('searchInput');
+        const deptFilter = document.getElementById('deptFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        const companyFilter = document.getElementById('companyFilter');
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+        const studentTableBody = document.getElementById('studentTableBody');
+
+        // Initialize
+        filteredStudents = [...students];
+
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            
+            const icon = themeToggle.querySelector('i');
+            icon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            
+            updateChartsTheme();
+            localStorage.setItem('theme', newTheme);
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            const icon = themeToggle.querySelector('i');
+            icon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
+        // Sidebar Toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Navigation Items
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Get Chart Colors based on theme
+        function getChartColors() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            return {
+                text: isDark ? '#f1f5f9' : '#0f172a',
+                grid: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                accent: '#06d6a0'
+            };
+        }
+
+        // Initialize Bar Chart
+        function initBarChart() {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            const colors = getChartColors();
+            
+            if (barChart) {
+                barChart.destroy();
+            }
+            
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: companyData.labels,
+                    datasets: [{
+                        label: 'Students Placed',
+                        data: companyData.values,
+                        backgroundColor: [
+                            'rgba(6, 214, 160, 0.8)',
+                            'rgba(17, 138, 178, 0.8)',
+                            'rgba(255, 209, 102, 0.8)',
+                            'rgba(239, 71, 111, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(6, 214, 160, 0.6)',
+                            'rgba(17, 138, 178, 0.6)',
+                            'rgba(255, 209, 102, 0.6)'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: colors.grid
+                            },
+                            ticks: {
+                                color: colors.text
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: colors.text
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Pie Chart
+        function initPieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            
+            if (pieChart) {
+                pieChart.destroy();
+            }
+            
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: departmentData.labels,
+                    datasets: [{
+                        data: departmentData.values,
+                        backgroundColor: departmentData.colors,
+                        borderWidth: 0,
+                        cutout: '65%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Update Legend
+            const legendContainer = document.getElementById('pieLegend');
+            legendContainer.innerHTML = departmentData.labels.map((label, index) => `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: ${departmentData.colors[index]}"></div>
+                    <span class="legend-label">${label}</span>
+                    <span class="legend-value">${departmentData.values[index]}%</span>
+                </div>
+            `).join('');
+        }
+
+        // Initialize Line Chart
+        function initLineChart() {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            const colors = getChartColors();
+            
+            if (lineChart) {
+                lineChart.destroy();
+            }
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(6, 214, 160, 0.3)');
+            gradient.addColorStop(1, 'rgba(6, 214, 160, 0)');
+            
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: packageTrends.years,
+                    datasets: [{
+                        label: 'Highest Package (LPA)',
+                        data: packageTrends.highest,
+                        borderColor: '#06d6a0',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#06d6a0',
+                        pointBorderColor: '#0a0f1c',
+                        pointBorderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 20,
+                            grid: {
+                                color: colors.grid
+                            },
+                            ticks: {
+                                color: colors.text,
+                                callback: function(value) {
+                                    return value + ' LPA';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: colors.grid
+                            },
+                            ticks: {
+                                color: colors.text
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Charts Theme
+        function updateChartsTheme() {
+            initBarChart();
+            initPieChart();
+            initLineChart();
+        }
+
+        // Render Student Table
+        function renderTable() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedStudents = filteredStudents.slice(start, end);
+            
+            studentTableBody.innerHTML = paginatedStudents.map(student => {
+                const deptClass = {
+                    'CSE': 'dept-cse',
+                    'ECE': 'dept-ece',
+                    'MECH': 'dept-mech',
+                    'CIVIL': 'dept-civil',
+                    'IT': 'dept-it'
+                }[student.department] || 'dept-cse';
+                
+                const initials = student.name.split(' ').map(n => n[0]).join('');
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="student-name">
+                                <div class="student-avatar">${initials}</div>
+                                ${student.name}
+                            </div>
+                        </td>
+                        <td><span class="dept-badge ${deptClass}">${student.department}</span></td>
+                        <td>
+                            <div class="company-logo">
+                                <div class="company-icon"><i class="fas fa-building"></i></div>
+                                ${student.company}
+                            </div>
+                        </td>
+                        <td><span class="package-value">${student.package} LPA</span></td>
+                        <td>${student.year}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('showingCount').textContent = paginatedStudents.length;
+            document.getElementById('totalCount').textContent = filteredStudents.length;
+            
+            renderPagination();
+        }
+
+        // Render Pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            let html = '';
+            
+            // Previous button
+            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="prev">
+                <i class="fas fa-chevron-left"></i>
+            </button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<button class="page-btn" disabled>...</button>`;
+                }
+            }
+            
+            // Next button
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="next">
+                <i class="fas fa-chevron-right"></i>
+            </button>`;
+            
+            pagination.innerHTML = html;
+            
+            // Add event listeners
+            pagination.querySelectorAll('.page-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = btn.dataset.page;
+                    if (page === 'prev' && currentPage > 1) {
+                        currentPage--;
+                    } else if (page === 'next' && currentPage < totalPages) {
+                        currentPage++;
+                    } else if (!isNaN(page)) {
+                        currentPage = parseInt(page);
+                    }
+                    renderTable();
+                });
+            });
+        }
+
+        // Search and Filter
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const dept = deptFilter.value;
+            const year = yearFilter.value;
+            const company = companyFilter.value;
+            
+            filteredStudents = students.filter(student => {
+                const matchesSearch = student.name.toLowerCase().includes(searchTerm) ||
+                                    student.company.toLowerCase().includes(searchTerm);
+                const matchesDept = !dept || student.department === dept;
+                const matchesYear = !year || student.year === parseInt(year);
+                const matchesCompany = !company || student.company === company;
+                
+                return matchesSearch && matchesDept && matchesYear && matchesCompany;
+            });
+            
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Sort Table
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+            
+            filteredStudents.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+                
+                if (sortDirection === 'asc') {
+                    return valA > valB ? 1 : -1;
+                } else {
+                    return valA < valB ? 1 : -1;
+                }
+            });
+            
+            renderTable();
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', applyFilters);
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        resetFiltersBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            deptFilter.value = '';
+            yearFilter.value = '';
+            companyFilter.value = '';
+            filteredStudents = [...students];
+            currentPage = 1;
+            renderTable();
+        });
+
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                sortTable(th.dataset.sort);
+            });
+        });
+
+        // Chart period buttons
+        document.querySelectorAll('.chart-btn[data-period]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.chart-btn[data-period]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Update chart data based on period
+            });
+        });
+
+        // Chart metric buttons
+        document.querySelectorAll('.chart-btn[data-metric]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.chart-btn[data-metric]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const metric = btn.dataset.metric;
+                const newData = metric === 'highest' ? packageTrends.highest : packageTrends.average;
+                const newMin = metric === 'highest' ? 20 : 5;
+                
+                lineChart.data.datasets[0].data = newData;
+                lineChart.data.datasets[0].label = metric === 'highest' ? 'Highest Package (LPA)' : 'Average Package (LPA)';
+                lineChart.options.scales.y.min = newMin;
+                lineChart.update();
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        // Counter Animation
+        function animateCounter(element, target) {
+            const duration = 2000;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 16);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize charts
+            initBarChart();
+            initPieChart();
+            initLineChart();
+            
+            // Initialize table
+            renderTable();
+            
+            // Observe elements for animation
+            document.querySelectorAll('.stat-card').forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 150);
+            });
+            
+            document.querySelectorAll('.chart-card').forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, 600 + index * 150);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('tableSection').classList.add('visible');
+            }, 1000);
+            
+            // Animate counters
+            document.querySelectorAll('.stat-value[data-count]').forEach(el => {
+                const target = parseInt(el.dataset.count);
+                animateCounter(el, target);
+            });
+        });
+
+        // Respect reduced motion preference
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('.stat-card, .chart-card, .table-section').forEach(el => {
+                el.classList.add('visible');
+            });
+        }
+    </script>
+</body>
+</html>
